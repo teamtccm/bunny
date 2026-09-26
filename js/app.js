@@ -1512,8 +1512,8 @@ function recalculateModalTotal() {
 
     // Generate VietQR URL
     const bankCode = (APP_CONFIG.bank && APP_CONFIG.bank.bankCode) || "970416";
-    const accountNo = (APP_CONFIG.bank && APP_CONFIG.bank.accountNumber) || "27384751";
-    const accountName = encodeURIComponent((APP_CONFIG.bank && APP_CONFIG.bank.accountHolder) || "DOAN QUANG TAN");
+    const accountNo = (APP_CONFIG.bank && APP_CONFIG.bank.accountNumber) || "27820961";
+    const accountName = encodeURIComponent((APP_CONFIG.bank && APP_CONFIG.bank.accountHolder) || "TRINH DUC THINH");
     const memo = encodeURIComponent(orderCode);
     const qrUrl = `https://api.vietqr.io/image/${bankCode}-${accountNo}-compact2.jpg?amount=${finalAmount}&addInfo=${memo}&accountName=${accountName}`;
 
@@ -1525,7 +1525,7 @@ function recalculateModalTotal() {
 
 function handleQrLoadError(img) {
     // If VietQR API has network issue, show SVG QR or fallback placeholder
-    img.src = `https://quickchart.io/qr?text=ACB-27384751-DOAN_QUANG_TAN&size=200`;
+    img.src = `https://quickchart.io/qr?text=ACB-27820961-TRINH_DUC_THINH&size=200`;
 }
 
 function copyText(text, msg) {
@@ -1555,7 +1555,7 @@ function submitOrderAndNotifyTelegram() {
     }
 
     const orderData = {
-        orderCode: state.currentCheckoutItem?.orderCode || ("BUNNY" + Date.now()),
+        orderCode: state.currentCheckoutItem?.orderCode || ("BUNNY" + Math.floor(1000 + Math.random() * 9000)),
         productName: state.currentCheckoutItem?.name || "Set Quà Bunny",
         totalAmount: state.currentCheckoutItem?.finalAmount || 475000,
         customer: { name, phone, address },
@@ -1566,6 +1566,7 @@ function submitOrderAndNotifyTelegram() {
 
     saveOrderToStorage(orderData);
     notifyTelegramBot(orderData);
+    sendOrderToGoogleSheet(orderData);
 
     safeConfetti({ particleCount: 80, spread: 80, origin: { y: 0.6 } });
     closeCheckoutModal();
@@ -1576,6 +1577,18 @@ function submitOrderAndNotifyTelegram() {
 💰 Tổng thanh toán: ${orderData.totalAmount.toLocaleString('vi-VN')}đ
 
 Nhà Bunny đã tiếp nhận đơn hàng và đang đóng gói hộp quà nơ lụa + viết thiệp sáp cho bạn! Nhân viên sẽ gọi điện/Zalo tới ${phone} trong 5 phút để xác nhận.`);
+}
+
+function sendOrderToGoogleSheet(order) {
+    const webhookUrl = APP_CONFIG.googleSheetWebhookUrl;
+    if (!webhookUrl || webhookUrl.trim() === "") return;
+
+    fetch(webhookUrl, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(order)
+    }).catch(err => console.warn("Google Sheet sync error:", err));
 }
 
 

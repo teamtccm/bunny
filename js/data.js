@@ -37,16 +37,17 @@ const APP_CONFIG = {
     bank: {
         bankCode: "970416",
         bankName: "ACB - Ngân hàng TMCP Á Châu",
-        accountNumber: "27384751",
-        accountHolder: "DOAN QUANG TAN"
+        accountNumber: "27820961",
+        accountHolder: "TRINH DUC THINH"
     },
 
-    // TÍCH HỢP BẮN TELEGRAM
+    // TÍCH HỢP BẮN TELEGRAM & GOOGLE SHEET
     telegramBot: {
-        botToken: "",
-        chatId: "",
+        botToken: "8746965311:AAFDnkaagBryQPeN971tQm8iK2YsIXJM9-Y",
+        chatId: "-5547409331",
         enabled: true
     },
+    googleSheetWebhookUrl: "", // URL Web App Google Apps Script nhận đơn về Sheet
 
     // TÙY CHỌN DỊCH VỤ SHIP (CHỈ TẠI HÀ NỘI)
     shippingModes: [
