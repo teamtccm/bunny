@@ -47,7 +47,7 @@ const APP_CONFIG = {
         chatId: "-5547409331",
         enabled: true
     },
-    googleSheetWebhookUrl: "", // URL Web App Google Apps Script nhận đơn về Sheet
+    googleSheetWebhookUrl: "https://script.google.com/macros/s/AKfycbyGShIU5mKyo5mDt0j28dg3bCKDrJewyqAwaBaOpJO8J2hCITzkAngKQSs4ZKrpKXWsXg/exec", // URL Web App Google Apps Script nhận đơn về Sheet
 
     // TÙY CHỌN DỊCH VỤ SHIP (CHỈ TẠI HÀ NỘI)
     shippingModes: [
