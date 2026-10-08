@@ -1,6 +1,7 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
- * 🐰 TIỆM QUÀ NHÀ BUNNY — HỆ THỐNG QUẢN LÝ ĐƠN & BIẾN ĐỘNG SỐ DƯ TỰ ĐỘNG
+ * 🐰 TIỆM QUÀ NHÀ BUNNY — HỆ THỐNG QUẢN LÝ ĐƠN, BIẾN ĐỘNG SỐ DƯ TỰ ĐỘNG,
+ *    TIẾN ĐỘ CTV LÀM HÀNG & SỔ QUỸ SAO KÊ NGUYÊN VẬT LIỆU (NVL)
  * ═══════════════════════════════════════════════════════════════════════════════
  * 
  * Bot: Tiệm Bunny Auto Pay (@bunny_pay_bot)
@@ -12,10 +13,11 @@
  *  - Số tài khoản: 27820961
  *  - Chủ tài khoản: TRINH DUC THINH
  * 
- * 🛡️ CƠ CHẾ BẢO VỆ CHỐNG TRÙNG VỚI ĐIỆP VIÊN TÀI LIỆU (DUAL-LOCK):
- *  1. Chỉ quét và xử lý các giao dịch có nội dung bắt đầu bằng "BUNNY" (ví dụ: BUNNY1082)
- *  2. Kiểm tra đích danh STK nhận tiền: 27820961 (khác hoàn toàn STK Điệp Viên 27384751)
- *  -> Dù 2 hệ thống dùng chung 1 Gmail nhận mail ACB, cũng tuyệt đối KHÔNG bao giờ bị nhầm lẫn!
+ * 🛡️ HỆ THỐNG 3 BẢNG GOOGLE SHEET LIÊN KẾT TỰ ĐỘNG:
+ *  1. Sheet "DonHang_Bunny": Nhận đơn trực tiếp từ Web khi khách đặt hàng.
+ *  2. Sheet "TienDo_Tho_LamHang": Tự động đẩy việc cho CTV Làm Hàng khi tiền về ACB,
+ *     tự động áp dụng công thức chia hoa hồng 3 bên (Thợ, Sale, Chủ Shop).
+ *  3. Sheet "SaoKe_NguyenVatLieu": Quản lý dòng tiền mua NVL, đối soát ảnh bill / sao kê ngân hàng.
  * ═══════════════════════════════════════════════════════════════════════════════
  */
 
@@ -24,64 +26,71 @@ var BUNNY_CONFIG = {
   TELEGRAM_CHAT_ID: "-5547409331",
   ACB_ACCOUNT_NUMBER: "27820961",
   ACB_ACCOUNT_NAME: "TRINH DUC THINH",
-  SHEET_NAME: "DonHang_Bunny"
+  SHEET_ORDERS: "DonHang_Bunny",
+  SHEET_PRODUCTION: "TienDo_Tho_LamHang",
+  SHEET_EXPENSES: "SaoKe_NguyenVatLieu"
 };
 
 /* ═══════════════════════════════════════════════════════════════
-   1. KHỞI TẠO BẢNG GOOGLE SHEET (Chạy 1 lần đầu tiên)
+   1. KHỞI TẠO TẤT CẢ 3 BẢNG GOOGLE SHEET (Chạy 1 lần duy nhất)
    ═══════════════════════════════════════════════════════════════ */
-function setupBunnySheet() {
+function setupAllBunnySheets() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(BUNNY_CONFIG.SHEET_NAME) || ss.insertSheet(BUNNY_CONFIG.SHEET_NAME);
 
-  if (sheet.getLastRow() === 0) {
-    var headers = [
-      "Thời Gian Đặt",
-      "Mã Đơn Hàng",
-      "Họ Tên Khách",
-      "Số Điện Thoại",
-      "Địa Chỉ Giao Quà",
-      "Sản Phẩm / Set Quà",
-      "Tổng Tiền (VNĐ)",
-      "Hình Thức Giao",
-      "Lời Chúc Thiệp Sáp",
-      "Trạng Thái",
-      "Thời Gian Tiền Về"
+  // 1.1. Sheet Đơn Hàng Từ Web
+  var sOrders = ss.getSheetByName(BUNNY_CONFIG.SHEET_ORDERS) || ss.insertSheet(BUNNY_CONFIG.SHEET_ORDERS);
+  if (sOrders.getLastRow() === 0) {
+    var headers1 = [
+      "Thời Gian Đặt", "Mã Đơn Hàng", "Họ Tên Khách", "Số Điện Thoại",
+      "Địa Chỉ Giao Quà", "Sản Phẩm / Set Quà", "Tổng Tiền (VNĐ)",
+      "Hình Thức Giao", "Lời Chúc Thiệp Sáp", "Trạng Thái", "Thời Gian Tiền Về"
     ];
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    sheet.getRange(1, 1, 1, headers.length)
-      .setFontWeight("bold")
-      .setBackground("#ffe4e6") // Hồng pastel thương hiệu Bunny
-      .setFontColor("#9f1239")
-      .setHorizontalAlignment("center");
-    sheet.setFrozenRows(1);
-    sheet.setColumnWidth(1, 160);
-    sheet.setColumnWidth(2, 130);
-    sheet.setColumnWidth(3, 160);
-    sheet.setColumnWidth(4, 120);
-    sheet.setColumnWidth(5, 250);
-    sheet.setColumnWidth(6, 220);
-    sheet.setColumnWidth(7, 130);
-    sheet.setColumnWidth(8, 160);
-    sheet.setColumnWidth(9, 250);
-    sheet.setColumnWidth(10, 160);
-    sheet.setColumnWidth(11, 160);
+    sOrders.getRange(1, 1, 1, headers1.length).setValues([headers1])
+      .setFontWeight("bold").setBackground("#ffe4e6").setFontColor("#9f1239").setHorizontalAlignment("center");
+    sOrders.setFrozenRows(1);
   }
-  Logger.log("✅ Đã khởi tạo Sheet DonHang_Bunny thành công!");
+
+  // 1.2. Sheet Tiến Độ Làm Hàng & Hoa Hồng CTV
+  var sProd = ss.getSheetByName(BUNNY_CONFIG.SHEET_PRODUCTION) || ss.insertSheet(BUNNY_CONFIG.SHEET_PRODUCTION);
+  if (sProd.getLastRow() === 0) {
+    var headers2 = [
+      "Mã Đơn Hàng", "Ngày Giao Việc", "Sản Phẩm", "CTV Làm Hàng (Thợ)",
+      "CTV Bán Hàng (Sale)", "Giá Bán Khách (VNĐ)", "Gốc NVL (VNĐ)",
+      "Công Thợ (VNĐ)", "Lãi Thợ (30%)", "Tổng Trả Thợ", "Thợ Đút Túi",
+      "Hoa Hồng Sale", "Lãi Ròng Chủ Shop", "Tiến Độ Làm", "Ghi Chú / Hạn Giao"
+    ];
+    sProd.getRange(1, 1, 1, headers2.length).setValues([headers2])
+      .setFontWeight("bold").setBackground("#fecdd3").setFontColor("#881337").setHorizontalAlignment("center");
+    sProd.setFrozenRows(1);
+  }
+
+  // 1.3. Sheet Sổ Quỹ & Sao Kê Nguyên Vật Liệu (NVL)
+  var sExp = ss.getSheetByName(BUNNY_CONFIG.SHEET_EXPENSES) || ss.insertSheet(BUNNY_CONFIG.SHEET_EXPENSES);
+  if (sExp.getLastRow() === 0) {
+    var headers3 = [
+      "Mã Khoản Chi", "Ngày Chi", "Mã Đơn Liên Quan", "Thợ Chi Tiền",
+      "Chi Tiết Vật Tư / NVL", "Số Tiền Thực Tế", "Hình Thức Chi",
+      "Mã GD / Số Tham Chiếu", "Link Ảnh Bill / Sao Kê", "Trạng Thái Đối Soát", "Ghi Chú Kiểm Duyệt"
+    ];
+    sExp.getRange(1, 1, 1, headers3.length).setValues([headers3])
+      .setFontWeight("bold").setBackground("#fef3c7").setFontColor("#92400e").setHorizontalAlignment("center");
+    sExp.setFrozenRows(1);
+  }
+
+  Logger.log("✅ Đã khởi tạo trọn bộ 3 Sheet quản lý Nhà Bunny thành công!");
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   2. TIẾP NHẬN ĐƠN TỪ WEBSITE (doPost Webhook)
-   Khách bấm 'Xác Nhận & Đặt Hàng' trên web -> Tự lưu vào Sheet
+   2. TIẾP NHẬN ĐƠN TỪ WEB (doPost Webhook)
    ═══════════════════════════════════════════════════════════════ */
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName(BUNNY_CONFIG.SHEET_NAME);
+    var sheet = ss.getSheetByName(BUNNY_CONFIG.SHEET_ORDERS);
     if (!sheet) {
-      setupBunnySheet();
-      sheet = ss.getSheetByName(BUNNY_CONFIG.SHEET_NAME);
+      setupAllBunnySheets();
+      sheet = ss.getSheetByName(BUNNY_CONFIG.SHEET_ORDERS);
     }
 
     var orderCode = String(data.orderCode || ("BUNNY" + Math.floor(1000 + Math.random() * 9000))).toUpperCase();
@@ -94,19 +103,9 @@ function doPost(e) {
     var shipping = data.shipping || "Giao tiêu chuẩn";
     var letterMessage = data.letterMessage || "Không có ghi chú thiệp";
 
-    // Ghi dòng mới vào Sheet
     sheet.appendRow([
-      nowStr,
-      orderCode,
-      customerName,
-      customerPhone,
-      customerAddress,
-      productName,
-      totalAmount,
-      shipping,
-      letterMessage,
-      "CHỜ THANH TOÁN",
-      ""
+      nowStr, orderCode, customerName, customerPhone, customerAddress,
+      productName, totalAmount, shipping, letterMessage, "CHỜ THANH TOÁN", ""
     ]);
 
     var lastRow = sheet.getLastRow();
@@ -122,27 +121,25 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  return ContentService.createTextOutput("🐰 Tiệm Quà Nhà Bunny AutoPay API is Running!");
+  return ContentService.createTextOutput("🐰 Tiệm Quà Nhà Bunny AutoPay & CTV Master API is Running!");
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   3. QUÉT EMAIL ACB TỰ ĐỘNG (Chạy định kỳ mỗi 1 phút)
-   Khớp mã đơn BUNNY & STK 27820961 -> Bắn Telegram nổ chuông
+   3. QUÉT EMAIL ACB TỰ ĐỘNG & TỰ ĐỘNG HẠCH TOÁN HOA HỒNG CTV
    ═══════════════════════════════════════════════════════════════ */
 function scanBunnyBankEmails() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(BUNNY_CONFIG.SHEET_NAME);
-  if (!sheet || sheet.getLastRow() <= 1) return;
+  var sOrders = ss.getSheetByName(BUNNY_CONFIG.SHEET_ORDERS);
+  var sProd = ss.getSheetByName(BUNNY_CONFIG.SHEET_PRODUCTION);
+  if (!sOrders || sOrders.getLastRow() <= 1) return;
 
-  var data = sheet.getDataRange().getValues();
+  var data = sOrders.getDataRange().getValues();
   var pendingOrders = [];
 
-  // Lọc các đơn đang ở trạng thái CHỜ THANH TOÁN
   for (var i = 1; i < data.length; i++) {
     var code = String(data[i][1]).trim().toUpperCase();
     var status = String(data[i][9]).trim().toUpperCase();
 
-    // Chỉ nhận đơn có mã BUNNY và chưa thanh toán
     if (code.indexOf("BUNNY") >= 0 && status !== "ĐÃ THANH TOÁN" && status !== "PAID_SUCCESS") {
       pendingOrders.push({
         row: i + 1,
@@ -161,7 +158,6 @@ function scanBunnyBankEmails() {
 
   if (pendingOrders.length === 0) return;
 
-  // Đọc 25 email mới nhất từ ACB trong Gmail
   var threads = GmailApp.getInboxThreads(0, 25);
   for (var t = 0; t < threads.length; t++) {
     var messages = threads[t].getMessages();
@@ -169,42 +165,85 @@ function scanBunnyBankEmails() {
       var msg = messages[m];
       var emailText = (msg.getSubject() + " " + msg.getPlainBody()).toUpperCase();
 
-      // KIỂM TRA ĐIỀU KIỆN CHỐNG NHẦM:
-      // Email phải từ ACB (mailalert@acb.com.vn hoặc có chữ ACB)
-      // VÀ phải có chữ "BUNNY"
       if (emailText.indexOf("BUNNY") === -1) continue;
 
       for (var p = 0; p < pendingOrders.length; p++) {
         var order = pendingOrders[p];
 
-        // Khớp chính xác mã đơn hàng (Ví dụ: BUNNY1082)
         if (emailText.indexOf(order.code) >= 0) {
           var paidTimeStr = Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss");
 
-          // 1. Cập nhật Google Sheet sang ĐÃ THANH TOÁN (Màu xanh ngọc đẹp mắt)
-          sheet.getRange(order.row, 10).setValue("ĐÃ THANH TOÁN").setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
-          sheet.getRange(order.row, 11).setValue(paidTimeStr).setHorizontalAlignment("center");
+          // 1. Cập nhật Sheet DonHang_Bunny -> ĐÃ THANH TOÁN
+          sOrders.getRange(order.row, 10).setValue("ĐÃ THANH TOÁN").setBackground("#dcfce7").setFontColor("#166534").setFontWeight("bold");
+          sOrders.getRange(order.row, 11).setValue(paidTimeStr).setHorizontalAlignment("center");
 
-          // 2. Bắn thông báo nổ chuông tiền về qua Telegram Bot @bunny_pay_bot
+          // 2. Tự động tính toán chi phí & hoa hồng theo định mức
+          var price = order.amount;
+          var nvl = 50000;
+          var labor = 25000;
+          var saleBonus = Math.round(price * 0.10);
+
+          if (price < 100000) {
+            // Đơn bé (Ví dụ: Bông hồng 40k)
+            nvl = 10000;
+            labor = 10000;
+            saleBonus = 5000;
+          } else if (price >= 200000) {
+            // Đơn VIP (Ví dụ: Thỏ công chúa 250k)
+            nvl = 80000;
+            labor = 40000;
+            saleBonus = Math.round(price * 0.15);
+          }
+
+          var costBase = nvl + labor;
+          var bonusWorker = Math.round(costBase * 0.30); // Lãi sản xuất 30%
+          var workerTotal = nvl + labor + bonusWorker;
+          var workerPocket = labor + bonusWorker; // Thợ đút túi
+          var shopProfit = price - workerTotal - saleBonus;
+
+          // 3. Đẩy đơn tự động sang Sheet Tiến Độ Làm Hàng (TienDo_Tho_LamHang)
+          if (sProd) {
+            sProd.appendRow([
+              order.code,
+              paidTimeStr,
+              order.product,
+              "Chờ phân công thợ", // CTV làm hàng
+              "CTV Sale Hệ Thống",  // CTV bán hàng
+              price,
+              nvl,
+              labor,
+              bonusWorker,
+              workerTotal,
+              workerPocket,
+              saleBonus,
+              shopProfit,
+              "1. Chờ tiếp nhận",
+              order.letter ? ("Thiệp: " + order.letter) : ""
+            ]);
+            var prodLastRow = sProd.getLastRow();
+            sProd.getRange(prodLastRow, 14).setBackground("#fef9c3").setFontColor("#854d0e").setFontWeight("bold");
+          }
+
+          // 4. Bắn Telegram thông báo full chi tiết hoa hồng
           var telegramMsg = 
-            "🎉 <b>[TIỆM QUÀ BUNNY — TIỀN ĐÃ VỀ TÀI KHOẢN!]</b>\n" +
+            "🎉 <b>[TIỆM QUÀ BUNNY — TIỀN VỀ & PHÂN BỔ HOA HỒNG!]</b>\n" +
             "━━━━━━━━━━━━━━━━━━━━\n" +
-            "💰 <b>Số tiền:</b> <code>+" + order.amount.toLocaleString("vi-VN") + " VNĐ</code>\n" +
+            "💰 <b>Khách thanh toán:</b> <code>+" + price.toLocaleString("vi-VN") + " VNĐ</code>\n" +
             "📦 <b>Mã đơn hàng:</b> <code>#" + order.code + "</code>\n" +
             "🎁 <b>Quà tặng:</b> " + order.product + "\n" +
+            "👤 <b>Khách nhận:</b> " + order.name + " (" + order.phone + ")\n" +
             "━━━━━━━━━━━━━━━━━━━━\n" +
-            "👤 <b>Người nhận:</b> <b>" + order.name + "</b>\n" +
-            "📞 <b>Số điện thoại:</b> " + order.phone + "\n" +
-            "📍 <b>Địa chỉ:</b> " + order.address + "\n" +
-            "🚚 <b>Gói giao:</b> " + order.shipping + "\n" +
-            "💌 <b>Lời chúc thiệp:</b> <i>\"" + order.letter + "\"</i>\n" +
+            "📐 <b>HẠCH TOÁN TỰ ĐỘNG 3 BÊN:</b>\n" +
+            "✂️ <b>Trả Thợ (Tổng):</b> <code>" + workerTotal.toLocaleString("vi-VN") + "đ</code> (Thợ đút túi lãi: <b>" + workerPocket.toLocaleString("vi-VN") + "đ</b>)\n" +
+            "   <i>• Gốc NVL: " + nvl.toLocaleString("vi-VN") + "đ | Công: " + labor.toLocaleString("vi-VN") + "đ | Lãi 30%: " + bonusWorker.toLocaleString("vi-VN") + "đ</i>\n" +
+            "🎯 <b>Hoa hồng Sale:</b> <code>" + saleBonus.toLocaleString("vi-VN") + "đ</code>\n" +
+            "🏆 <b>LÃI RÒNG CHỦ SHOP CẤT TÚI:</b> <code>+" + shopProfit.toLocaleString("vi-VN") + " VNĐ</code>\n" +
             "━━━━━━━━━━━━━━━━━━━━\n" +
-            "🏦 <b>Tài khoản nhận:</b> ACB - " + BUNNY_CONFIG.ACB_ACCOUNT_NUMBER + " (" + BUNNY_CONFIG.ACB_ACCOUNT_NAME + ")\n" +
-            "⏱️ <b>Thời gian:</b> " + paidTimeStr + "\n\n" +
-            "✅ <b>XÁC NHẬN:</b> Đã khớp tiền tự động 100%! Nhà Bunny chuẩn bị đóng gói nơ lụa gửi khách nhé! 🐰✨";
+            "⏱️ <b>Thời gian:</b> " + paidTimeStr + "\n" +
+            "✅ <i>Đã đẩy đơn sang Bảng Quản Lý CTV & Sổ Quỹ NVL!</i> 🐰✨";
 
           banTelegram(telegramMsg);
-          Logger.log("✅ Đã khớp tiền cho đơn: " + order.code);
+          Logger.log("✅ Đã xử lý & hạch toán xong cho đơn: " + order.code);
           return;
         }
       }
@@ -231,16 +270,4 @@ function banTelegram(htmlText) {
   } catch (e) {
     Logger.log("Lỗi gửi Telegram: " + e.toString());
   }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   5. HÀM TEST BẮN TIN THỬ NGHIỆM LÊN TELEGRAM
-   (Chạy thử để kiểm tra bot có gửi tin vào nhóm được không)
-   ═══════════════════════════════════════════════════════════════ */
-function testBunnyBot() {
-  banTelegram(
-    "🐰 <b>[TIỆM QUÀ NHÀ BUNNY — KẾT NỐI THÀNH CÔNG!]</b>\n\n" +
-    "Xin chào! Bot <b>@bunny_pay_bot</b> đã được kết nối với Nhóm quản trị Tiệm Bunny.\n" +
-    "Sẵn sàng nhận thông báo đơn hàng và tiền về tự động! ✨"
-  );
 }

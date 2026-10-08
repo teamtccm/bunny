@@ -402,51 +402,22 @@ function goToSlide(slideIdx) {
 // 4. TRANG CHỦ (HOME SECTIONS RENDERER)
 // ============================================================================
 function renderHomeSections() {
-    renderHomeCombos();
-    renderHomeSnackBouquets();
-    renderHomeHandmadeFlowers();
+    renderHomeSportsCrochet();
+    renderHomeMinecraftCrochet();
 }
 
-function renderHomeSnackBouquets() {
-    const container = document.getElementById("homeSnackBouquetsGrid");
+function renderHomeSportsCrochet() {
+    const container = document.getElementById("homeSportsGrid");
     if (!container) return;
-    const items = PRODUCTS_DATABASE.filter(p => p.category === "snack_bouquets");
+    const items = PRODUCTS_DATABASE.filter(p => p.category === "sports_crochet");
     renderProductGridItems(container, items);
 }
 
-function renderHomeHandmadeFlowers() {
-    const container = document.getElementById("homeHandmadeFlowersGrid");
+function renderHomeMinecraftCrochet() {
+    const container = document.getElementById("homeMinecraftGrid");
     if (!container) return;
-    const items = PRODUCTS_DATABASE.filter(p => p.category === "flowers_handmade");
+    const items = PRODUCTS_DATABASE.filter(p => p.category === "minecraft_crochet");
     renderProductGridItems(container, items);
-}
-
-function renderHomeCombos() {
-    const container = document.getElementById("homeCombosGrid");
-    if (!container) return;
-
-    const combos = PRODUCTS_DATABASE.filter(p => p.category === "combo_love");
-    container.innerHTML = combos.map(combo => `
-        <article class="relative aspect-square rounded-3xl overflow-hidden shadow-md hover:shadow-2xl border-2 border-rose-100 hover:border-rose-400 transition-all duration-500 hover:-translate-y-1.5 cursor-pointer group select-none" onclick="viewProduct('${combo.id}')">
-            <!-- Full-bleed Image -->
-            <img src="${combo.image}" alt="${combo.name}" class="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out">
-
-            <!-- Badges top -->
-            <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-[11px] font-black uppercase shadow-md backdrop-blur-md ${combo.badgeColor || 'bg-rose-500 text-white'}">
-                ${combo.badge}
-            </span>
-            <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-white/95 text-rose-500 backdrop-blur-md shadow-xs flex items-center gap-1">
-                <i class="fa-solid fa-star text-[10px]"></i> 5.0 (${combo.reviewsCount})
-            </span>
-
-            <!-- TIÊU ĐỀ NẰM NGAY TRONG ẢNH ĐƯỢC PHỦ NHẸ LÊN (NGẮN GỌN TRỌNG TÂM, KHÔNG CHỮ MIÊU TẢ BÉ) -->
-            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-14 pb-3.5 px-4 text-white flex flex-col justify-end">
-                <h3 class="font-black text-sm sm:text-base text-white leading-snug group-hover:text-rose-200 transition line-clamp-2 drop-shadow-md">
-                    ${combo.name}
-                </h3>
-            </div>
-        </article>
-    `).join("");
 }
 
 function renderProductGridItems(container, items) {
@@ -554,7 +525,7 @@ function renderProductDetail(productId) {
 
                 <!-- Price Box -->
                 <div class="p-4 rounded-2xl bg-rose-50/80 border border-rose-200 flex items-baseline gap-3">
-                    <div class="text-3xl font-black text-rose-600">
+                    <div id="detailPriceDisplay" class="text-3xl font-black text-rose-600">
                         ${product.price.toLocaleString('vi-VN')}đ
                     </div>
                     ${product.originalPrice ? `
@@ -572,6 +543,35 @@ function renderProductDetail(productId) {
                     ${product.description}
                 </p>
 
+                <!-- Dịch Vụ Cá Nhân Hóa (Custom Thêu Tên & Đính Hình Be Bé) -->
+                <div class="p-4 rounded-2xl bg-amber-50/80 border-2 border-amber-300 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2.5 cursor-pointer font-black text-xs text-amber-950 select-none">
+                            <input type="checkbox" id="detailCustomToggle" onchange="toggleCustomDetail(this)" class="w-4 h-4 rounded text-rose-500 focus:ring-rose-400">
+                            <span>🧵 Thêu Tên & Đính Thêm Hình Be Bé (+25.000đ)</span>
+                        </label>
+                        <span class="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-bold uppercase">Độc bản</span>
+                    </div>
+                    
+                    <div id="detailCustomInputs" class="hidden space-y-2.5 pt-2 border-t border-amber-200/70 text-xs">
+                        <div>
+                            <label class="font-bold text-slate-700 block mb-1">Tên, chữ viết tắt, ngày kỷ niệm hoặc số áo muốn thêu:</label>
+                            <input type="text" id="detailCustomText" placeholder="VD: Mai Linh • 20/10 hoặc Số 10 Đức Anh" class="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 focus:border-rose-400 outline-none font-medium text-xs">
+                        </div>
+                        <div>
+                            <label class="font-bold text-slate-700 block mb-1">Chọn hình charm len be bé đính kèm:</label>
+                            <select id="detailCustomCharm" class="w-full h-9 px-3 rounded-xl bg-white border border-amber-300 text-xs font-semibold outline-none">
+                                <option value="❤️ Trái tim đỏ be bé">❤️ Trái tim đỏ be bé</option>
+                                <option value="⭐ Ngôi sao vàng mini">⭐ Ngôi sao vàng mini</option>
+                                <option value="🌸 Bông hoa cúc nhỏ">🌸 Bông hoa cúc nhỏ</option>
+                                <option value="🍀 Cỏ 4 lá may mắn">🍀 Cỏ 4 lá may mắn</option>
+                                <option value="⚽ Quả bóng mini">⚽ Quả bóng mini</option>
+                                <option value="🟩 Khối pixel xanh">🟩 Khối pixel xanh</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Dịch Vụ Đi Kèm Miễn Phí -->
                 <div class="grid grid-cols-2 gap-2.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 font-semibold">
                     <div class="flex items-center gap-2">
@@ -587,8 +587,8 @@ function renderProductDetail(productId) {
                         <span>Đóng gói hộp quà nơ lụa chu đáo</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-rose-500">🎁</span>
-                        <span>Trao tận tay người nhận trọn vẹn</span>
+                        <span class="text-rose-500">🛵</span>
+                        <span>Trao tận tay người thương trọn vẹn</span>
                     </div>
                 </div>
 
@@ -671,50 +671,71 @@ function adjustDetailQty(delta) {
     input.value = qty;
 }
 
+function toggleCustomDetail(checkbox) {
+    const box = document.getElementById("detailCustomInputs");
+    if (box) box.classList.toggle("hidden", !checkbox.checked);
+    updateDetailPriceDisplay();
+}
+
+function updateDetailPriceDisplay() {
+    if (!state.selectedProduct) return;
+    const isCustom = document.getElementById("detailCustomToggle")?.checked;
+    const total = state.selectedProduct.price + (isCustom ? 25000 : 0);
+    const el = document.getElementById("detailPriceDisplay");
+    if (el) el.textContent = total.toLocaleString("vi-VN") + "đ";
+}
+
+function toggleModalCustomBox(checkbox) {
+    const box = document.getElementById("modalCustomBox");
+    if (box) box.classList.toggle("hidden", !checkbox.checked);
+    recalculateModalTotal();
+}
+
 function addToCartFromDetail(productId) {
     const qty = parseInt(document.getElementById("detailQtyInput")?.value || "1", 10);
     const product = PRODUCTS_DATABASE.find(p => p.id === productId);
     if (!product) return;
 
-    const existing = state.cart.find(i => i.id === productId);
-    if (existing) {
-        existing.quantity = (existing.quantity || 1) + qty;
-    } else {
-        state.cart.push({
-            id: product.id,
-            name: product.name,
-            subtitle: product.subtitle || '',
-            price: product.price,
-            image: product.image,
-            quantity: qty
-        });
-    }
+    const isCustom = document.getElementById("detailCustomToggle")?.checked || false;
+    const customText = document.getElementById("detailCustomText")?.value.trim() || "";
+    const customCharmSelect = document.getElementById("detailCustomCharm");
+    const customCharm = customCharmSelect ? customCharmSelect.value : "";
+
+    const finalItemPrice = product.price + (isCustom ? 25000 : 0);
+    const itemSub = isCustom 
+        ? `${product.subtitle || ''} (Thêu: ${customText || 'Theo yêu cầu'} • Charm: ${customCharm})` 
+        : (product.subtitle || '');
+
+    state.cart.push({
+        id: isCustom ? `${product.id}_custom_${Date.now()}` : product.id,
+        name: isCustom ? `${product.name} (Thêu Tên)` : product.name,
+        subtitle: itemSub,
+        price: finalItemPrice,
+        image: product.image,
+        quantity: qty,
+        isCustom: isCustom,
+        customText: customText,
+        customCharm: customCharm
+    });
 
     saveCartToStorage();
     safeConfetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
-    showToast(`Đã thêm ${qty} hộp "${product.name}" vào giỏ quà!`, "success");
+    showToast(`Đã thêm ${qty} "${product.name}" vào giỏ quà!`, "success");
     toggleCartDrawer();
 }
 
 function getCategoryName(catId) {
     const nameMap = {
         home: "Trang Chủ",
-        combos: "Bộ Sưu Tập Combo Quà Tặng",
-        combo_love: "Combo Cảm Xúc Tình Yêu & Sinh Nhật",
-        flowers: "Hoa Len Đan Tay & Hoa Nghệ Thuật",
-        flowers_handmade: "Hoa Len Đan Tay & Hoa Nghệ Thuật",
-        mini_gifts: "Bộ Sưu Tập Quà Tặng Mini Xinh",
-        snack_bouquets: "Bó Bánh Kẹo Ăn Được Ngọt Ngào",
-        diy: "Custom Hộp Quà Theo Cảm Xúc",
-        gift_boxes: "Vỏ Hộp Quà Nơ Lụa & Túi Mica",
-        theme_2010: "Set Quà 20/10 — Nàng Thơ & Tặng Mẹ",
-        theme_2011: "Set Quà 20/11 — Tri Ân Thầy Cô Giáo",
-        stationery_cards: "Phụ Kiện Xinh Xắn & Hoa Độc Bản",
-        all: "Toàn Bộ Quà Tặng Nhà Bunny"
+        sports_crochet: "Bộ Sưu Tập Len Thể Thao & Đam Mê",
+        minecraft_crochet: "Bộ Sưu Tập Minecraft Pixel Đan Len",
+        keychain_mini: "Móc Khóa Len Mini Xinh Xắn",
+        custom_gift: "Dịch Vụ Custom Thêu Tên & Trao Quà Tận Tay",
+        all: "Toàn Bộ Quà Tặng Len Nhà Bunny"
     };
     if (nameMap[catId]) return nameMap[catId];
     const cat = GIFT_CATEGORIES.find(c => c.id === catId);
-    return cat ? cat.name : "Danh Mục Quà Tặng";
+    return cat ? cat.name : "Danh Mục Quà Tặng Len";
 }
 
 // ============================================================================
@@ -743,26 +764,18 @@ function renderCategoryPage(catId, genderFilter) {
     if (title) title.textContent = catName;
 
     let items = [...PRODUCTS_DATABASE];
-    if (catId === "combos") {
-        items = items.filter(p => p.category === "combo_love");
-        if (subtitle) subtitle.textContent = "Các combo phối sẵn bánh kẹo, hoa len vĩnh cửu & bộ quà tặng bạn trai, bạn gái trọn vẹn nhất";
-    } else if (catId === "flowers") {
-        items = items.filter(p => p.category === "flowers_handmade" || p.category === "snack_bouquets");
-        if (subtitle) subtitle.textContent = "Bó hoa bánh kẹo ăn được, hoa hồng len móc tay tỉ mỉ và túi hoa mica trong suốt không tàn";
-    } else if (catId === "mini_gifts") {
-        items = items.filter(p => p.category === "mini_gifts");
-        if (subtitle) subtitle.textContent = "Sa bàn siêu xe, móc treo Spider-Man, thú len công chúa, găng tay boxing & kẹp bướm nhung";
-    } else if (catId === "theme_2010") {
-        items = items.filter(p => p.category === "combo_love" || p.category === "flowers_handmade");
-        if (title) title.textContent = "Bộ Sưu Tập Quà Tặng 20/10 (Nàng Thơ, Tặng Mẹ)";
-        if (subtitle) subtitle.textContent = "Gói trọn nâng niu với hoa hồng len vĩnh cửu, túi mica trong veo và combo tỏ tình ngọt ngào";
-    } else if (catId === "theme_2011") {
-        items = items.filter(p => p.category === "flowers_handmade" || p.id === "FRAME-CLAY-3D" || p.id === "BOX-MICA-SUN");
-        if (title) title.textContent = "Bộ Sưu Tập Quà Tặng 20/11 (Tri Ân Thầy Cô)";
-        if (subtitle) subtitle.textContent = "Tri ân công ơn dạy dỗ với khung hoa đất sét 3D trang trọng và thiệp sáp niêm phong thủ công";
-    } else if (catId === "stationery_cards") {
-        items = items.filter(p => p.category === "flowers_handmade" || p.category === "gift_boxes" || p.category === "mini_gifts");
-        if (title) title.textContent = "Phụ Kiện, Hoa Nghệ Thuật & Quà Mini";
+    if (catId === "sports_crochet") {
+        items = items.filter(p => p.category === "sports_crochet");
+        if (subtitle) subtitle.textContent = "Sa bàn sân bóng, cúp vàng FIFA World Cup, áo đấu thể thao, vợt cầu lông & bóng chuyền len";
+    } else if (catId === "minecraft_crochet") {
+        items = items.filter(p => p.category === "minecraft_crochet");
+        if (subtitle) subtitle.textContent = "Kiếm kim cương Diamond Sword, Khối TNT len, quái vật Creeper, chú ong len vàng & Iron Golem";
+    } else if (catId === "keychain_mini") {
+        items = items.filter(p => p.id.includes("KEYCHAIN") || p.name.includes("Móc Khóa"));
+        if (subtitle) subtitle.textContent = "Móc khóa len đan tay tỉ mỉ, nhỏ gọn dễ dàng gắn balo, chìa khóa xe và túi xách";
+    } else if (catId === "custom_gift") {
+        items = items.filter(p => p.isCustomizable);
+        if (subtitle) subtitle.textContent = "Các sản phẩm len hỗ trợ thêu tên độc bản, gắn số áo, ngày kỷ niệm và charm len xinh xắn";
     } else if (catId && catId !== "all") {
         items = items.filter(p => p.category === catId);
     }
@@ -771,19 +784,19 @@ function renderCategoryPage(catId, genderFilter) {
     if (currentGender === "nam") {
         items = items.filter(p => p.gender === "nam" || p.gender === "unisex");
         if (title) title.textContent = `${catName} — Dành Cho Nam / Bạn Trai`;
-        if (subtitle) subtitle.textContent = "Tuyển chọn quà tặng nam tính, siêu xe Lamborghini, Spider-Man Marvel, boxing thể thao & tone màu mạnh mẽ";
+        if (subtitle) subtitle.textContent = "Tuyển chọn quà tặng thể thao bóng đá, bóng chuyền, cúp vàng, cầu lông & kiếm Minecraft cực ngầu";
     } else if (currentGender === "nu") {
-        items = items.filter(p => p.gender === "nu");
+        items = items.filter(p => p.gender === "nu" || p.gender === "unisex");
         if (title) title.textContent = `${catName} — Dành Cho Nữ / Nàng Thơ`;
-        if (subtitle) subtitle.textContent = "Tuyển chọn quà tặng công chúa dịu dàng, hoa hồng len vĩnh cửu, kẹp bướm nhung & quà ngọt ngào";
+        if (subtitle) subtitle.textContent = "Tuyển chọn móc khóa ong len má hồng, chú heo hồng Minecraft siêu cute & phụ kiện len dịu dàng";
     } else if (currentGender === "couple") {
-        items = items.filter(p => p.gender === "couple" || p.category === "combo_love");
+        items = items.filter(p => p.gender === "couple" || p.id.includes("JERSEY") || p.id.includes("KEYCHAIN"));
         if (title) title.textContent = `${catName} — Quà Tặng Cặp Đôi & Tình Yêu`;
-        if (subtitle) subtitle.textContent = "Tín vật tình yêu gắn kết bền chặt đôi lứa và các combo dỗ dành ngọt ngào";
+        if (subtitle) subtitle.textContent = "Cặp áo đấu số 10 & số 5, móc khóa đôi trao tận tay người thương kèm thiệp sáp đỏ";
     } else if (currentGender === "unisex") {
         items = items.filter(p => p.gender === "unisex");
-        if (title) title.textContent = `${catName} — Quà Độc Lạ / Troll Bạn Thân`;
-        if (subtitle) subtitle.textContent = "Những món quà hài hước, giải trí xả stress đem lại tiếng cười sảng khoái";
+        if (title) title.textContent = `${catName} — Quà Độc Lạ / Fan Cuồng`;
+        if (subtitle) subtitle.textContent = "Khối nổ TNT, Creeper xanh lá và những món quà len Minecraft vui nhộn";
     }
 
     // Cập nhật giao diện nút filter giới tính
@@ -1418,17 +1431,38 @@ function openProductCheckoutModal(productId) {
     if (!product) return;
 
     const qty = parseInt(document.getElementById("detailQtyInput")?.value || "1", 10);
+    const isDetailCustom = document.getElementById("detailCustomToggle")?.checked || false;
+    const detailCustomText = document.getElementById("detailCustomText")?.value.trim() || "";
+    const detailCustomCharmSelect = document.getElementById("detailCustomCharm");
+    const detailCustomCharm = detailCustomCharmSelect ? detailCustomCharmSelect.value : "";
+
     const itemTotal = product.price * qty;
 
     state.currentCheckoutItem = {
         id: product.id,
         name: qty > 1 ? `${product.name} (x${qty})` : product.name,
-        subtitle: product.subtitle || "Kèm thiệp sáp niêm phong",
+        subtitle: product.subtitle || "Kèm thiệp sáp niêm phong & hộp quà chu đáo",
         price: itemTotal,
         unitPrice: product.price,
         quantity: qty,
         image: product.image
     };
+
+    // Đồng bộ trạng thái custom từ trang chi tiết sang modal
+    const modalCustomToggle = document.getElementById("modalCustomToggle");
+    const modalCustomBox = document.getElementById("modalCustomBox");
+    const modalCustomText = document.getElementById("modalCustomText");
+    const modalCustomCharm = document.getElementById("modalCustomCharm");
+
+    if (modalCustomToggle) {
+        modalCustomToggle.checked = isDetailCustom;
+    }
+    if (modalCustomBox) {
+        modalCustomBox.classList.toggle("hidden", !isDetailCustom);
+    }
+    if (modalCustomText && detailCustomText) {
+        modalCustomText.value = detailCustomText;
+    }
 
     renderCheckoutModalData();
     const modal = document.getElementById("checkoutModal");
@@ -1492,25 +1526,32 @@ function recalculateModalTotal() {
     if (!state.currentCheckoutItem) return;
 
     const select = document.getElementById("orderShippingSelect");
-    const shipFee = select ? parseInt(select.value, 10) : 25000;
+    const shipFee = select ? parseInt(select.value, 10) : 40000;
+    const modalCustomToggle = document.getElementById("modalCustomToggle");
+    const isCustom = modalCustomToggle ? modalCustomToggle.checked : false;
+    const customFee = isCustom ? 25000 : 0;
+
     const basePrice = state.currentCheckoutItem.price;
-    const finalAmount = basePrice + shipFee;
+    const finalAmount = basePrice + shipFee + customFee;
 
     state.currentCheckoutItem.finalAmount = finalAmount;
     state.currentCheckoutItem.shipFee = shipFee;
+    state.currentCheckoutItem.customFee = customFee;
 
-    // Display total
+    // Hiển thị tổng thanh toán
     const totalEl = document.getElementById("orderTotalAmountDisplay");
     if (totalEl) totalEl.textContent = finalAmount.toLocaleString('vi-VN') + "đ";
 
-    // Generate Order Code & Memo
-    const orderCode = "BUNNY" + Math.floor(1000 + Math.random() * 9000);
-    state.currentCheckoutItem.orderCode = orderCode;
+    // Sinh Mã đơn hàng & Nội dung chuyển khoản
+    if (!state.currentCheckoutItem.orderCode) {
+        state.currentCheckoutItem.orderCode = "BUNNY" + Math.floor(1000 + Math.random() * 9000);
+    }
+    const orderCode = state.currentCheckoutItem.orderCode;
 
     const memoEl = document.getElementById("orderTransferMemo");
     if (memoEl) memoEl.textContent = orderCode;
 
-    // Generate VietQR URL
+    // Sinh đường dẫn VietQR tự động
     const bankCode = (APP_CONFIG.bank && APP_CONFIG.bank.bankCode) || "970416";
     const accountNo = (APP_CONFIG.bank && APP_CONFIG.bank.accountNumber) || "27820961";
     const accountName = encodeURIComponent((APP_CONFIG.bank && APP_CONFIG.bank.accountHolder) || "TRINH DUC THINH");
@@ -1524,7 +1565,6 @@ function recalculateModalTotal() {
 }
 
 function handleQrLoadError(img) {
-    // If VietQR API has network issue, show SVG QR or fallback placeholder
     img.src = `https://quickchart.io/qr?text=ACB-27820961-TRINH_DUC_THINH&size=200`;
 }
 
@@ -1546,8 +1586,14 @@ function submitOrderAndNotifyTelegram() {
     const phone = document.getElementById("orderCustomerPhone")?.value.trim();
     const address = document.getElementById("orderCustomerAddress")?.value.trim();
     const letter = document.getElementById("orderLetterMessage")?.value.trim();
+    const deliveryNote = document.getElementById("orderDeliveryNote")?.value.trim();
     const shippingSelect = document.getElementById("orderShippingSelect");
-    const shippingName = shippingSelect ? shippingSelect.options[shippingSelect.selectedIndex].text : "Giao tiêu chuẩn";
+    const shippingName = shippingSelect ? shippingSelect.options[shippingSelect.selectedIndex].text : "Trao Tận Tay Người Thương (40.000đ)";
+
+    const isCustom = document.getElementById("modalCustomToggle")?.checked || false;
+    const customText = document.getElementById("modalCustomText")?.value.trim();
+    const customCharmSelect = document.getElementById("modalCustomCharm");
+    const customCharm = customCharmSelect ? customCharmSelect.options[customCharmSelect.selectedIndex]?.text : "";
 
     if (!name || !phone) {
         alert("Vui lòng điền Họ tên và Số điện thoại nhận quà để Bunny phục vụ chu đáo nhé!");
@@ -1556,9 +1602,15 @@ function submitOrderAndNotifyTelegram() {
 
     const orderData = {
         orderCode: state.currentCheckoutItem?.orderCode || ("BUNNY" + Math.floor(1000 + Math.random() * 9000)),
-        productName: state.currentCheckoutItem?.name || "Set Quà Bunny",
-        totalAmount: state.currentCheckoutItem?.finalAmount || 475000,
-        customer: { name, phone, address },
+        productName: state.currentCheckoutItem?.name || "Set Quà Len Bunny",
+        totalAmount: state.currentCheckoutItem?.finalAmount || 0,
+        customer: { name, phone, address: address || "Hẹn trao tận tay" },
+        deliveryNote: deliveryNote || "Không có ghi chú thêm",
+        customService: isCustom ? {
+            enabled: true,
+            text: customText || "Theo tư vấn của shop",
+            charm: customCharm || "Trái tim đỏ be bé"
+        } : { enabled: false },
         letterMessage: letter || "Không có yêu cầu viết thiệp",
         shipping: shippingName,
         createdAt: new Date().toISOString()
@@ -1575,8 +1627,9 @@ function submitOrderAndNotifyTelegram() {
 
 🐰 Mã Đơn: ${orderData.orderCode}
 💰 Tổng thanh toán: ${orderData.totalAmount.toLocaleString('vi-VN')}đ
+🛵 Dịch vụ: ${shippingName}
 
-Nhà Bunny đã tiếp nhận đơn hàng và đang đóng gói hộp quà nơ lụa + viết thiệp sáp cho bạn! Nhân viên sẽ gọi điện/Zalo tới ${phone} trong 5 phút để xác nhận.`);
+Nhà Bunny đã tiếp nhận đơn hàng và đang chuẩn bị tỉ mỉ cho bạn! Nhân viên sẽ gọi điện/Zalo tới ${phone} trong 5 phút để xác nhận.`);
 }
 
 function sendOrderToGoogleSheet(order) {
@@ -1590,7 +1643,6 @@ function sendOrderToGoogleSheet(order) {
         body: JSON.stringify(order)
     }).catch(err => console.warn("Google Sheet sync error:", err));
 }
-
 
 function saveOrderToStorage(order) {
     try {
@@ -1610,7 +1662,10 @@ function notifyTelegramBot(order) {
     try {
         const customerName = order.customer?.name || "Khách yêu Bunny";
         const customerPhone = order.customer?.phone || "Chưa có SĐT";
-        const customerAddress = order.customer?.address || "Hà Nội";
+        const customerAddress = order.customer?.address || "Hẹn trao tận tay";
+        const customInfo = order.customService?.enabled 
+            ? `🧵 <b>Custom Thêu Tên & Charm:</b> "${order.customService.text}" (Charm: ${order.customService.charm})` 
+            : `🧵 <b>Custom Thêu:</b> Không`;
 
         const text = `
 🐰 <b>[TIỆM QUÀ NHÀ BUNNY] ĐƠN ĐẶT QUÀ MỚI!</b>
@@ -1620,8 +1675,10 @@ function notifyTelegramBot(order) {
 💰 <b>Tổng tiền:</b> <b>${order.totalAmount.toLocaleString('vi-VN')} VNĐ</b>
 
 👤 <b>Khách nhận:</b> ${customerName} (${customerPhone})
-📍 <b>Địa chỉ ship:</b> ${customerAddress}
-🚚 <b>Hình thức giao:</b> ${order.shipping || 'Giao tiêu chuẩn Hà Nội'}
+📍 <b>Địa chỉ:</b> ${customerAddress}
+🛵 <b>Hình thức:</b> ${order.shipping || 'Trao Tận Tay Người Thương'}
+⏰ <b>Ghi chú trao tận tay:</b> <i>${order.deliveryNote || 'Không có'}</i>
+${customInfo}
 💌 <b>Lời chúc thiệp:</b> <i>"${order.letterMessage || 'Không có yêu cầu viết thiệp'}"</i>
 ⏱️ <b>Thời gian đặt:</b> ${new Date().toLocaleString('vi-VN')}
         `.trim();
@@ -1653,58 +1710,58 @@ function showToast(message, type = "info") {
 // ============================================================================
 const QUIZ_OPTIONS = [
     { 
-        id: "opt_lover",
-        label: "Người yêu / Bạn gái (Lãng mạn, ngọt ngào)", 
-        icon: "🌸", 
-        target: "COMBO-NU-BUNNY-PRINCESS",
-        keywords: ["#Set3Món250K", "#ThỏCôngChúa", "#TranhHoa3D", "#NàngThơ"],
-        whyChoose: "Set 3 món trọn vẹn trong hộp lụa hồng: Bé Thỏ Bunny quý tộc đầm dạ hội, Khung tranh hoa đất sét 3D lồng kính và Kẹp tóc cánh bướm hoa nhung kẽm.",
-        solvesProblem: "Giải quyết triệt để nỗi lo tặng quà thiếu ấn tượng; set quà đầy đặn, sang trọng lưu giữ kỷ niệm nhiều năm không phai tàn."
+        id: "opt_crush_boy",
+        label: "Bạn Trai Mê Đá Bóng / Thể Thao", 
+        icon: "⚽", 
+        target: "SP-PITCH-01",
+        keywords: ["#SaBànSânBóng", "#BóngĐáLen", "#CầuThủ", "#ĐộcBản"],
+        whyChoose: "Sa bàn sân cỏ mini bằng len kèm trái bóng tròn êm ái, món quà thể thao đong đầy sự thấu hiểu đam mê của chàng.",
+        solvesProblem: "Giải quyết bài toán tặng quà cho bạn trai nam tính, vừa ý nghĩa vừa làm vật phẩm decor góc học tập/làm việc siêu độc."
     },
     { 
-        id: "opt_apology",
-        label: "Người yêu đang dỗi / Cần xin lỗi gấp", 
-        icon: "🩹", 
-        target: "COMBO-NU-TUANLOC-WINTER",
-        keywords: ["#SưởiẤmTráiTim", "#TuầnLộcLen", "#HoaHồngĐỏ", "#HếtGiậnNgay"],
-        whyChoose: "Set 3 món ấm áp: Chú tuần lộc len mũi đỏ đế gỗ mộc, đóa hoa hồng nhung đỏ đan tay và kẹp tóc cánh bướm nhung làm tan chảy mọi sự giận hờn.",
-        solvesProblem: "Gỡ rối hoàn toàn thế bế tắc chiến tranh lạnh bằng món quà ấm áp và tâm thư xin lỗi chân thành được niêm phong sáp đỏ."
+        id: "opt_crush_girl",
+        label: "Bạn Gái Thích Đồ Xinh / Nàng Thơ Cute", 
+        icon: "🐝", 
+        target: "MC-BEE-01",
+        keywords: ["#ChúOngVàng", "#MáHồngCute", "#ĐanTayTỉMỉ", "#MócBalo"],
+        whyChoose: "Chú ong len vàng má hồng đôi cánh thiên thần mini, từng mũi len đan tay êm ái dễ thương đốn gục mọi trái tim bạn gái.",
+        solvesProblem: "Món quà ngọt ngào, tinh tế, dễ dàng mang theo bên mình gắn chìa khóa hay balo đi học mỗi ngày."
     },
     { 
-        id: "opt_crush",
-        label: "Crush / Thầm thương (Cần tỏ tình 99.8%)", 
-        icon: "💌", 
-        target: "COMBO-NU-BUNNY-PRINCESS",
-        keywords: ["#TỏTìnhThànhCông", "#GhiĐiểmTuyệtĐối", "#DịuDàngTinhTế", "#KhôngGâyÁpLực"],
-        whyChoose: "Tone màu hồng pastel nhẹ nhàng chuẩn gu các nàng thơ, vừa ngọt ngào vừa lịch thiệp, không quá phô trương nhưng đong đầy sự quan tâm tỉ mỉ.",
-        solvesProblem: "Xóa tan nỗi sợ bị crush từ chối hoặc ngại ngùng khó xử. Món quà mang lại cảm giác an toàn, ấm áp và lời nhắn gửi tinh tế giúp crush dễ dàng mở lòng đồng ý."
+        id: "opt_gamer",
+        label: "Tặng Bạn Thân / Game Thủ Minecraft", 
+        icon: "🗡️", 
+        target: "MC-SWORD-05",
+        keywords: ["#KiếmKimCương", "#DiamondSword", "#PixelLen", "#Gamer"],
+        whyChoose: "Thanh kiếm kim cương Diamond Sword Minecraft phiên bản len móc 3D phối màu chuẩn game cực ngầu.",
+        solvesProblem: "Đúng gu 100% của mọi tín đồ game sinh tồn, món quà hài hước, độc lạ và bền bỉ."
+    },
+    { 
+        id: "opt_sports_lover",
+        label: "Bạn Bè Chơi Cầu Lông / Thể Thao", 
+        icon: "🏸", 
+        target: "SP-RACKET-02",
+        keywords: ["#CầuLôngLen", "#VợtMini", "#CầuLôngCute", "#NăngĐộng"],
+        whyChoose: "Cặp móc khóa vợt cầu lông mini đan lưới tinh tế kèm quả cầu lông len tí hon xinh xắn.",
+        solvesProblem: "Món quà nhỏ gọn, ý nghĩa, thể hiện sự đồng điệu cùng sở thích rèn luyện thể thao hàng ngày."
     },
     { 
         id: "opt_anniversary",
-        label: "Tặng Bạn Trai / Kỷ niệm người yêu nam", 
-        icon: "🏎️", 
-        target: "COMBO-NAM-SPIDERMAN",
-        keywords: ["#Set2Món130K", "#SpiderManLen", "#HoaHồngĐỏ", "#TúiMicaQuaiDa"],
-        whyChoose: "Túi mica quai da trắng sang xịn, móc len Spider-Man treo xe/balo và hoa hồng len nhung đỏ gửi tới người hùng trong lòng bạn.",
-        solvesProblem: "Không còn khó khăn khi tìm quà cho nam giới vừa nam tính, vừa lãng mạn lại có tính ứng dụng cao mỗi ngày."
+        label: "Kỷ Niệm Tình Yêu / Áo Đấu Đôi Thêu Tên", 
+        icon: "👕", 
+        target: "SP-JERSEY-03",
+        keywords: ["#ÁoĐấuSố5Số10", "#ThêuTênRiêng", "#ĐồĐôiÝNghĩa", "#TraoTậnTay"],
+        whyChoose: "Set áo đấu thể thao len phối số 5 & số 10 độc bản, hỗ trợ thêu tên và ngày kỷ niệm của 2 bạn.",
+        solvesProblem: "Tín vật tình yêu gắn kết bền chặt, mang dấu ấn riêng của cặp đôi không đụng hàng."
     },
     { 
-        id: "opt_bday",
-        label: "Sinh nhật bạn thân / Đam mê tốc độ", 
-        icon: "🎂", 
-        target: "PRD-LAMBO-LIBERTY",
-        keywords: ["#BoxXe200K", "#SaBànLamborghini", "#DioramaHoaAnhĐào", "#DecorBàn"],
-        whyChoose: "Box xe sa bàn Lamborghini Liberty Walk cực chiến trên bãi cỏ hoa anh đào và ghế đá công viên lồng hộp mica trong suốt.",
-        solvesProblem: "Món quà độc lạ, bất ngờ khiến người nhận trầm trồ thích thú, decor bàn làm việc hay taplo ô tô cực ngầu."
-    },
-    { 
-        id: "opt_teacher_mom",
-        label: "Mẹ / Thầy Cô Giáo (Hoa nghệ thuật trang trọng)", 
-        icon: "🌷", 
-        target: "FRAME-CLAY-3D",
-        keywords: ["#TriÂnKínhYêu", "#TrangTrọngThanhLịch", "#NghệThuậtThủCông", "#LưuNiệmTrọnĐời"],
-        whyChoose: "Tác phẩm hoa đất sét đắp nổi 3D trong khung gỗ tự nhiên sâu lòng sang trọng, mang nét đẹp nhã nhặn, thanh lịch và trường tồn với thời gian.",
-        solvesProblem: "Giải quyết khó khăn khi chọn quà cho người lớn tuổi / thầy cô giáo đòi hỏi sự chỉn chu, trang nhã, không phù phiếm nhưng vẫn đầy ắp lòng biết ơn và sự kính trọng."
+        id: "opt_champion",
+        label: "Cổ Vũ Chiến Thắng / Tặng Người Số 1", 
+        icon: "🏆", 
+        target: "SP-WORLDCUP-06",
+        keywords: ["#CúpVàngWorldCup", "#Số1TrongLòng", "#VinhQuang", "#LenVàng"],
+        whyChoose: "Chiếc cúp vàng FIFA World Cup móc bằng sợi len nhũ vàng lấp lánh biểu trưng cho vị trí số 1 trong trái tim bạn.",
+        solvesProblem: "Lời khẳng định 'Cậu là nhà vô địch / điều tuyệt vời nhất', truyền cảm hứng và niềm vui bất tận."
     }
 ];
 
